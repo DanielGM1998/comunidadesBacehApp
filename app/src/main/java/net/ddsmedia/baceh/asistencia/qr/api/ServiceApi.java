@@ -3,6 +3,7 @@ package net.ddsmedia.baceh.asistencia.qr.api;
 import net.ddsmedia.baceh.asistencia.qr.entidad.Actualizar;
 import net.ddsmedia.baceh.asistencia.qr.entidad.Asistenciados;
 import net.ddsmedia.baceh.asistencia.qr.entidad.Beneficiarios;
+import net.ddsmedia.baceh.asistencia.qr.entidad.Faltas;
 import net.ddsmedia.baceh.asistencia.qr.entidad.FechaUltPase;
 import net.ddsmedia.baceh.asistencia.qr.entidad.Listas;
 import net.ddsmedia.baceh.asistencia.qr.entidad.LoginResult;
@@ -35,12 +36,15 @@ public interface ServiceApi {
     Call<LoginResult> listaAccessUser(@Field("username") String username,
                                       @Field("password") String password);
 
+    // sincronizarAsistencia (2)
     @FormUrlEncoded
-    @POST("app/postAsistencia/{fk_titular}/{fecha}/{usuario}")
+    @POST("app/postAsistencia/{fk_titular}/{fecha}/{usuario}/{fechaDescarga}")
     Call<Asistenciados> listaAsistencia(@Field("fk_titular") String fk_titular,
                                         @Field("fecha") String fecha,
-                                        @Field("usuario") String usuario);
+                                        @Field("usuario") String usuario,
+                                        @Field("fechaDescarga") String fechaDescarga);
 
+    // sincronizar (3)
     @FormUrlEncoded
     @POST("app/actualizar/{id_titular}/{ultima_visita}/{observaciones_asist}")
     Call<Actualizar>actualizarBeneficiario(
@@ -48,7 +52,13 @@ public interface ServiceApi {
             @Field("ultima_visita") String ultima_visita,
             @Field("observaciones_asist") String observaciones_asist);
 
-
+    // sincronizarFaltas (1)
+    @FormUrlEncoded
+    @POST("app/actualizarFaltas/{id_titular}/{faltas}/{fechaDescarga}")
+    Call<Faltas>actualizarFaltas(
+            @Field("id_titular") String id_titular,
+            @Field("faltas") String faltas,
+            @Field("fechaDescarga") String fechaDescarga);
 
 
 

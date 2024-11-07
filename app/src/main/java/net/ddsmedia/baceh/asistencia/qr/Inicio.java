@@ -35,10 +35,13 @@ import net.ddsmedia.baceh.asistencia.qr.api.ServiceApi;
 import net.ddsmedia.baceh.asistencia.qr.db.MyOpenHelper;
 import net.ddsmedia.baceh.asistencia.qr.entidad.Actualizar;
 import net.ddsmedia.baceh.asistencia.qr.entidad.Asistenciados;
+import net.ddsmedia.baceh.asistencia.qr.entidad.Faltas;
 import net.ddsmedia.baceh.asistencia.qr.entidad.Listas;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -364,7 +367,6 @@ public class Inicio extends AppCompatActivity {
                                 }).start();
 
                                 sincronizarForzado();
-                                sincronizarAsistenciaForzado();
 
                             }
                         });
@@ -459,8 +461,8 @@ public class Inicio extends AppCompatActivity {
                                     }
                                 }).start();
 
-                                sincronizar();
-                                sincronizarAsistencia();
+                                sincronizarFaltas();
+
 
                             }
                         });
@@ -702,7 +704,7 @@ public class Inicio extends AppCompatActivity {
                             if (contt == cursor.getCount()) {
                                 bandera = false;
                                 db.execSQL("Update beneficiarios set sincronizar='1'");
-                                Log.i("OK SINCRONIZAR","000");
+                                Log.i("OK SINCRONIZAR1","000");
 
                                 //Toast.makeText(Inicio.this, "Sincronizado", Toast.LENGTH_SHORT).show();
 
@@ -732,7 +734,7 @@ public class Inicio extends AppCompatActivity {
                             contFail++;
                             bandera = false;
                             bandera2 = false;
-                            Log.i("FAIL SINCRONIZAR", ""+contFail);
+                            Log.i("FAIL SINCRONIZAR1", ""+contFail);
                             if(contt+contFail == cursor.getCount()){
                                 //Toast.makeText(Inicio.this, "Error al intentar sincronizar, intentarlo más tarde", Toast.LENGTH_SHORT).show();
 
@@ -802,17 +804,21 @@ public class Inicio extends AppCompatActivity {
         Cursor cursor = db.rawQuery("SELECT * from asistencia WHERE sincronizar=3 ORDER BY fecha",null);
         if(cursor.getCount()>0) {
             contt2=0;
+            SharedPreferences preferences4 = getSharedPreferences("var", Context.MODE_PRIVATE);
             while (cursor.moveToNext()) {
                 if (bandera3) {
+                    String lista = cursor.getString(8);
+                    String diaList = preferences4.getString("FechaDescargaLista"+lista, "");
                     ////listaAsistencia() POST
-                    Call<Asistenciados> call3 = serviceApi.listaAsistencia(cursor.getString(1), cursor.getString(3), cursor.getString(6));
+                    Call<Asistenciados> call3 = serviceApi.listaAsistencia(cursor.getString(1), cursor.getString(3), cursor.getString(6), diaList);
                     call3.enqueue(new Callback<Asistenciados>() {
                         @Override
                         public void onResponse(Call<Asistenciados> call, Response<Asistenciados> response) {
                             contt2++;
                             if (contt2 == cursor.getCount()) {
                                 db.execSQL("Update asistencia set sincronizar=1");
-                                Log.i("OK ASISTENCIAS", "000");
+                                Log.i("OK ASISTENCIAS1", "000");
+                                sincronizar();
                             }
                         }
 
@@ -821,7 +827,7 @@ public class Inicio extends AppCompatActivity {
                             contFail2++;
                             bandera3 = false;
                             if (contFail2+contt2 == cursor.getCount()) {
-                                Log.i("FAIL ASISTENCIAS", "000");
+                                Log.i("FAIL ASISTENCIAS1", "000");
                             }
                         }
                     });
@@ -832,6 +838,115 @@ public class Inicio extends AppCompatActivity {
         }else{
             bandera=false;
             Log.i("TODAS ASISTENCIAS SINCRONIZADAS","000");
+        }
+    }
+
+    //SINCRONIZAR FALTAS CON SERVIDOR
+    private void sincronizarFaltas(){
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(Globals.URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        serviceApi = retrofit.create(ServiceApi.class);
+
+        MyOpenHelper conn = new MyOpenHelper(getApplicationContext(),MyOpenHelper.DATABASE_NOMBRE,null,MyOpenHelper.DATABASE_VERSION);
+        SQLiteDatabase db = conn.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * from beneficiarios WHERE estatus = 1 and sincronizar = 1",null);
+        if(cursor.getCount()>0) {
+            contt2=0;
+            SharedPreferences preferences3 = getSharedPreferences("var", Context.MODE_PRIVATE);
+            while (cursor.moveToNext()) {
+                if (bandera3) {
+                    String lista = cursor.getString(17);
+                    String diaList = preferences3.getString("FechaDescargaLista"+lista, "");
+
+                    Log.i("SQLITE"," | "+cursor.getString(0)+" | "+cursor.getString(6)+" | "+diaList);
+
+                    // evitar parsear fechas con 0000-00-00
+                    if(!cursor.getString(7).equals("0000-00-00")){
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+                        String descargaLista = diaList;
+                        String ultimaVisita = cursor.getString(7);
+
+                        LocalDate parseDescargaLista = LocalDate.parse(descargaLista, formatter);
+                        LocalDate parseUltimaVisita = LocalDate.parse(ultimaVisita, formatter);
+
+                        LocalDate limitePase = parseDescargaLista.plusDays(15);
+
+                        if ((parseUltimaVisita.isEqual(parseDescargaLista) || parseUltimaVisita.isAfter(parseDescargaLista)) &&
+                                parseUltimaVisita.isBefore(limitePase) || parseUltimaVisita.isEqual(limitePase)) {
+
+                            // La fecha de descarga está dentro del período
+                            Log.i("sqlite", "ya fue generada la falta");
+                            contt2++;
+                            if (contt2 == cursor.getCount()) {
+                                //db.execSQL("Update asistencia set sincronizar=1");
+                                Log.i("OK FALTAS2.2", "000");
+                                sincronizarAsistencia();
+                            }
+
+                        } else {
+
+                            // La fecha de descarga NO está dentro del período
+
+                            ////actualizarFaltas() POST
+                            Call<Faltas> call3 = serviceApi.actualizarFaltas(cursor.getString(0), cursor.getString(6), diaList);
+                            call3.enqueue(new Callback<Faltas>() {
+                                @Override
+                                public void onResponse(Call<Faltas> call, Response<Faltas> response) {
+                                    contt2++;
+                                    Log.i("OK FALTAS1", "000");
+                                    if (contt2 == cursor.getCount()) {
+                                        //db.execSQL("Update asistencia set sincronizar=1");
+                                        Log.i("OK FALTAS2", "000");
+                                        sincronizarAsistencia();
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(Call<Faltas> call, Throwable t) {
+                                    contFail2++;
+                                    bandera3 = false;
+                                    if (contFail2+contt2 == cursor.getCount()) {
+                                        Log.i("FAIL FALTAS1", "000");
+                                    }
+                                }
+                            });
+                            /////
+                        }
+                    }else{
+                        ////actualizarFaltas() POST
+                        Call<Faltas> call3 = serviceApi.actualizarFaltas(cursor.getString(0), cursor.getString(6), diaList);
+                        call3.enqueue(new Callback<Faltas>() {
+                            @Override
+                            public void onResponse(Call<Faltas> call, Response<Faltas> response) {
+                                contt2++;
+                                Log.i("OK FALTAS3", "000");
+                                if (contt2 == cursor.getCount()) {
+                                    //db.execSQL("Update asistencia set sincronizar=1");
+                                    Log.i("OK FALTAS4", "000");
+                                    sincronizarAsistencia();
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<Faltas> call, Throwable t) {
+                                contFail2++;
+                                bandera3 = false;
+                                if (contFail2+contt2 == cursor.getCount()) {
+                                    Log.i("FAIL FALTAS2", "000");
+                                }
+                            }
+                        });
+                        /////
+                    }
+
+                }
+            }
+        }else{
+            bandera=false;
+            Log.i("TODAS FALTAS SINCRONIZADAS","000");
         }
     }
 
@@ -872,6 +987,8 @@ public class Inicio extends AppCompatActivity {
                                 bandera = false;
                                 db.execSQL("Update beneficiarios set sincronizar='1'");
                                 Log.i("OK SINCRONIZAR FORZADO","000");
+
+                                sincronizarAsistenciaForzado();
 
                                 //Toast.makeText(Inicio.this, "Sincronizado", Toast.LENGTH_SHORT).show();
 
@@ -944,10 +1061,13 @@ public class Inicio extends AppCompatActivity {
         SQLiteDatabase db = conn.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT * from asistencia ORDER BY fecha",null);
             contt2=0;
+            SharedPreferences preferences4 = getSharedPreferences("var", Context.MODE_PRIVATE);
             while (cursor.moveToNext()) {
                 if (bandera3) {
+                    String lista = cursor.getString(8);
+                    String diaList = preferences4.getString("FechaDescargaLista"+lista, "");
                     ////listaAsistencia() POST
-                    Call<Asistenciados> call3 = serviceApi.listaAsistencia(cursor.getString(1), cursor.getString(3), cursor.getString(6));
+                    Call<Asistenciados> call3 = serviceApi.listaAsistencia(cursor.getString(1), cursor.getString(3), cursor.getString(6), diaList);
                     call3.enqueue(new Callback<Asistenciados>() {
                         @Override
                         public void onResponse(Call<Asistenciados> call, Response<Asistenciados> response) {

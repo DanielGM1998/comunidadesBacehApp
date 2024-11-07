@@ -1,0 +1,14 @@
+
+/app/.gradle
+/app/.idea
+app/debug/app-debug.aab
+app/proguard-rules.pro
+/app/release
+app/src/main/ic_launcher-playstore.png
+app/src/androidTest/java/net/ddsmedia/baceh/ExampleInstrumentedTest.java
+gradlew
+gradlew.bat
+gradle/wrapper/gradle-wrapper.jar
+app/src/test/java/net/ddsmedia/baceh/ExampleUnitTest.java
+/.gradle
+/.idea
