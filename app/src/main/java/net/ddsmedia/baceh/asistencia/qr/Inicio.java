@@ -111,7 +111,7 @@ public class Inicio extends AppCompatActivity {
         username();
         estadistica();
 
-        // borrar asistencia despues de 15 dias con shared preferences de fecha descarga de lista
+        // borrar asistencia despues de 8 dias con shared preferences de fecha descarga de lista
         SharedPreferences preferences2 = getSharedPreferences("var", Context.MODE_PRIVATE);
         MyOpenHelper conn = new MyOpenHelper(getApplicationContext(), MyOpenHelper.DATABASE_NOMBRE, null, MyOpenHelper.DATABASE_VERSION);
         SQLiteDatabase db = conn.getReadableDatabase();
@@ -132,8 +132,8 @@ public class Inicio extends AppCompatActivity {
                 int hoy = Integer.parseInt(formattedDate);
                 Log.d("SQLite", "Lista Value: " + hoy);
 
-                //////////////////// cambiar a 15 o 16 dias
-                if(hoy > (diaList+15)){
+                //////////////////// cambiar a 8 dias
+                if(hoy > (diaList+8)){
                     db.execSQL("DELETE FROM asistencia WHERE lista = '" + listaValue + "'");
                 }
 
@@ -151,7 +151,7 @@ public class Inicio extends AppCompatActivity {
                 //throw new RuntimeException(e);
             }
 
-            //////////////////// cambiar a 15 o 16 dias
+            //////////////////// cambiar a 8 dias
             visitaCalendar.add(Calendar.DAY_OF_MONTH, 1);
             String quinceDiasDespues = dateFormat.format(visitaCalendar.getTime());
             Log.i("compar",quinceDiasDespues);
@@ -166,7 +166,7 @@ public class Inicio extends AppCompatActivity {
 
 
 
-        // borrar asistencia despues de 15 dias
+        // borrar asistencia despues de 8 dias
         /*
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -188,7 +188,7 @@ public class Inicio extends AppCompatActivity {
                 //throw new RuntimeException(e);
             }
 
-            //////////////////// cambiar a 15 o 16 dias
+            //////////////////// cambiar a 8 dias
             visitaCalendar.add(Calendar.DAY_OF_MONTH, 1);
             String quinceDiasDespues = dateFormat.format(visitaCalendar.getTime());
             Log.i("compar",quinceDiasDespues);
@@ -872,7 +872,7 @@ public class Inicio extends AppCompatActivity {
                         LocalDate parseDescargaLista = LocalDate.parse(descargaLista, formatter);
                         LocalDate parseUltimaVisita = LocalDate.parse(ultimaVisita, formatter);
 
-                        LocalDate limitePase = parseDescargaLista.plusDays(15);
+                        LocalDate limitePase = parseDescargaLista.plusDays(8);
 
                         if ((parseUltimaVisita.isEqual(parseDescargaLista) || parseUltimaVisita.isAfter(parseDescargaLista)) &&
                                 parseUltimaVisita.isBefore(limitePase) || parseUltimaVisita.isEqual(limitePase)) {

@@ -245,7 +245,7 @@ public class Scan extends AppCompatActivity {
                             }
                         });
                     }else{
-                        // verificar si ya paso en los 15 dias posteriores a la descarga de lista
+                        // verificar si ya paso en los 8 dias posteriores a la descarga de lista
 
                         // Definir el formato de la fecha de entrada
                         SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -271,10 +271,10 @@ public class Scan extends AppCompatActivity {
                         //dia de descarga de lista
                         //Log.i("","cambios Share:"+dia);
 
-                        if(dia_ultima_visita >= dia && dia_ultima_visita <= (dia+15)){
-                            //ya ha pasado por su despensa esta quincena
+                        if(dia_ultima_visita >= dia && dia_ultima_visita <= (dia+8)){
+                            //ya ha pasado por su despensa esta semana
                             popupView.setBackgroundResource(R.color.yellow);
-                            txtDay.setText("El apoyo ya ha sido ENTREGADO esta quincena");
+                            txtDay.setText("El apoyo ya ha sido ENTREGADO esta semana");
                             imgView.setBackgroundResource(R.drawable.alert);
                             txtDay.setTextSize(20);
 

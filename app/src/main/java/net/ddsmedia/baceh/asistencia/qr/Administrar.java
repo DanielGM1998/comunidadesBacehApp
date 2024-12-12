@@ -240,7 +240,7 @@ public class Administrar extends AppCompatActivity {
                 // Obtener el día del año
                 int diaUltimaVisita = calendar.get(Calendar.DAY_OF_YEAR);
 
-                if(diaUltimaVisita >= diaList && diaUltimaVisita <= (diaList+15)){
+                if(diaUltimaVisita >= diaList && diaUltimaVisita <= (diaList+8)){
                     //Log.i("administt","old "+beneficiarios.getCredencial());
                     viewHolder.textView.setBackgroundColor(getContext().getResources().getColor(R.color.Banco2));
                     viewHolder.textView.setTextColor(getContext().getResources().getColor(R.color.black));
