@@ -462,6 +462,7 @@ public class Inicio extends AppCompatActivity {
                                 }).start();
 
                                 //sincronizarFaltas();
+                                sincronizarAsistencia();
 
 
                             }
